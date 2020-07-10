@@ -1,6 +1,7 @@
 from math import cos
 import datetime
 import csv
+import time
 
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.config import Config
@@ -8,6 +9,7 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.tabbedpanel import TabbedPanel
+from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy_garden.graph import LinePlot
 
@@ -36,6 +38,15 @@ def recordCSV(name="hehe"):
         writer = csv.writer(file, delimiter=',')
         writer.writerow(row)
         file.close()
+
+class ClockText(Label):
+    def __init__(self, *args, **kwargs):
+        super(ClockText, self).__init__(*args, **kwargs)
+        Clock.schedule_interval(self.update, 1)
+
+    def update(self, *args):
+        self.text = time.strftime('%I'+':'+'%M'+' %p')
+
 
 class RecordPopUp(Popup):
     file_name = ObjectProperty(None)
@@ -104,7 +115,7 @@ class MainScreen(BoxLayout):
     def graphButton(self):
         global EnableGraph, count
         if self.ids['graficar'].background_color == [0.0, 0.7, 0.0, 1.0]:
-            self.ids['graficar'].background_color = (0.3, 0.3, 0.3, 1.0)
+            self.ids['graficar'].background_color = (0.15, 0.15, 0.15, 1.0)
             EnableGraph = False
             count = 0
             self.plot_p.points = []
@@ -115,24 +126,24 @@ class MainScreen(BoxLayout):
             self.graph_V.add_plot(self.plot_v)
             return
 
-        elif self.ids['graficar'].background_color == [0.3, 0.3, 0.3, 1]:
+        elif self.ids['graficar'].background_color == [0.15, 0.15, 0.15, 1]:
             self.ids['graficar'].background_color = (0.0, 0.7, 0.0, 1.0)
             EnableGraph = True
             return
 
     def showButton(self):
         if self.ids['mostrar'].background_color == [0.0, 0.7, 0.0, 1.0]:
-            self.ids['mostrar'].background_color = (0.3, 0.3, 0.3, 1.0)
+            self.ids['mostrar'].background_color = (0.15, 0.15, 0.15, 1.0)
             return
-        elif self.ids['mostrar'].background_color == [0.3, 0.3, 0.3, 1]:
+        elif self.ids['mostrar'].background_color == [0.15, 0.15, 0.15, 1]:
             self.ids['mostrar'].background_color = (0.0, 0.7, 0.0, 1.0)
             return
 
     def configButton(self):
         if self.ids['setear'].background_color == [0.0, 0.7, 0.0, 1.0]:
-            self.ids['setear'].background_color = (0.3, 0.3, 0.3, 1.0)
+            self.ids['setear'].background_color = (0.15, 0.15, 0.15, 1.0)
             return
-        elif self.ids['setear'].background_color == [0.3, 0.3, 0.3, 1]:
+        elif self.ids['setear'].background_color == [0.15, 0.15, 0.15, 1]:
             ConfigPopUp().open()
             self.ids['setear'].background_color = (0.0, 0.7, 0.0, 1.0)
             return
@@ -141,18 +152,18 @@ class MainScreen(BoxLayout):
         global EnableRecord
         if self.ids['grabar'].background_color == [0.0, 0.7, 0.0, 1.0]:
             EnableRecord = False
-            self.ids['grabar'].background_color = (0.3, 0.3, 0.3, 1.0)
+            self.ids['grabar'].background_color = (0.15, 0.15, 0.15, 1.0)
             return
-        elif self.ids['grabar'].background_color == [0.3, 0.3, 0.3, 1]:
+        elif self.ids['grabar'].background_color == [0.15, 0.15, 0.15, 1]:
             RecordPopUp().open()
             self.ids['grabar'].background_color = (0.0, 0.7, 0.0, 1.0)
             return
 
     def infoButton(self):
         if self.ids['info'].background_color == [0.0, 0.7, 0.0, 1.0]:
-            self.ids['info'].background_color = (0.3, 0.3, 0.3, 1.0)
+            self.ids['info'].background_color = (0.15, 0.15, 0.15, 1.0)
             return
-        elif self.ids['info'].background_color == [0.3, 0.3, 0.3, 1]:
+        elif self.ids['info'].background_color == [0.15, 0.15, 0.15, 1]:
             self.ids['info'].background_color = (0.0, 0.7, 0.0, 1.0)
             return
 
