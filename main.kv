@@ -1,0 +1,267 @@
+#: import LinePlot kivy_garden.graph.LinePlot
+
+<ButtonNew@Button>:
+    background_normal: ''
+    background_down: ''
+    background_color: 0.3, 0.3, 0.3, 1
+    font_size: self.width/5.7
+
+<RecordPopUp@Popup>:
+    file_name: file_name
+    title: "RECOPILACION DE DATOS"
+    id: rpop
+    size_hint: 0.4, 0.3
+    auto_dismiss: False
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        BoxLayout:
+            padding: 10, 10, 10, 10
+
+            Label:
+                font_size: '30sp'
+                text: "Nombre del archivo: "
+                size_hint: 1, 0.8
+
+            TextInput:
+                id: file_name
+                font_size: '30sp'
+                size_hint: (1, 0.5)
+                height: 30
+                pos_hint: {"x":0.5, "top":0.65}
+                hint_text:'Name'
+                multiline: False
+                write_tab: False
+
+        BoxLayout:
+            padding: 100, 10, 100, 10
+            spacing: '100dp'
+
+            Button:
+                font_size: '25sp'
+                text: "Accept"
+                size_hint: 0.5, 0.5
+                on_release:
+                    root.accept()
+            Button:
+                font_size: '25sp'
+                text: "Cancel"
+                size_hint: 0.5, 0.5
+                on_release:
+                    app.root.recordButton()
+                    root.cancel()
+
+<ConfigPopUp@Popup>:
+    title: "CONFIGURACION"
+    id: spop
+    size_hint: 0.45, 0.6
+    auto_dismiss: True
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        ConfigTab:
+            size_hint: 1, 1
+            pos_hint: {'center_x': .5, 'center_y': .5}
+            do_default_tab: False
+            tab_height: 40
+            tab_width: 170
+
+            TabbedPanelItem:
+                text: 'SENSOR DE FLUJO'
+                Label:
+                    text: "First tab"
+
+            TabbedPanelItem:
+                text: 'SENSOR DE PRESION'
+                BoxLayout:
+                    Label:
+                        text: 'Press button'
+                    Button:
+                        text: 'Click it'
+
+        BoxLayout:
+            size_hint: 1, 0.1
+            padding: 100, 0, 100, 0
+            spacing: '100dp'
+
+            Button:
+                font_size: '25sp'
+                text: "Accept"
+                size_hint: 0.9, 0.9
+                on_release:
+                    app.root.configButton()
+                    root.accept()
+            Button:
+                font_size: '25sp'
+                text: "Cancel"
+                size_hint: 0.9, 0.9
+                on_release:
+                    app.root.configButton()
+                    root.cancel()
+
+<MainScreen>:
+
+    graph_P: graph_p
+    graph_F: graph_f
+    graph_V: graph_v
+
+    BoxLayout:
+        orientation: 'horizontal'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (0.1, 1)
+            padding: 10, 10, 10, 10
+            spacing: '10dp'
+            bcolor: 0.2, 0.2, 0.2, 1
+            canvas.before:
+                Color:
+                    rgba: self.bcolor
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            ButtonNew:
+                id: graficar
+                text: "Graficar"
+                size_hint: 1, 0.5
+                on_release: root.graphButton()
+
+            ButtonNew:
+                id: mostrar
+                text: "Mostrar\nParametros"
+                halign: 'center'
+                size_hint: 1, 0.5
+                on_release: root.showButton()
+
+            ButtonNew:
+                id: setear
+                text: "Configurar"
+                size_hint: 1, 0.5
+                on_release: root.configButton()
+                #Image:
+                #    source: 'icon.png'
+                #    width: self.parent.width
+                #    size_hint_y: None
+                #    size_hint_x: None
+                #    y: self.parent.y + .5* self.parent.height -.5 * self.parent.width/self.image_ratio
+                #    x: self.parent.x
+                #    keep_ratio: True
+                #    allow_stretch: True
+                #    size: self.parent.size #I think you can remove the size hints since they don't add anything...
+                #    stretch: True
+
+            ButtonNew:
+                id: grabar
+                text: "Grabar"
+                size_hint: 1, 0.5
+                on_release: root.recordButton()
+
+            ButtonNew:
+                id: info
+                text: "Info"
+                size_hint: 1, 0.5
+                on_release: root.infoButton()
+
+            ButtonNew:
+                id: salir
+                text: "Salir"
+                size_hint: 1, 0.5
+                on_release: root.exitButton()
+
+        BoxLayout:
+            orientation: 'vertical'
+            Graph:
+                id: graph_p
+                xlabel: 'Time'
+                ylabel: 'Presion'
+                x_ticks_minor: 10
+                x_ticks_major: 70
+                y_ticks_major: 0.2
+                y_grid_label: True
+                x_grid_label: True
+                padding: 3
+                x_grid: True
+                y_grid: True
+                xmin: -0
+                xmax: 700
+                ymin: -1
+                ymax: 1
+
+
+            Graph:
+                id: graph_f
+                xlabel: 'Tiempo'
+                ylabel: 'Flujo'
+                x_ticks_minor: 10
+                x_ticks_major: 70
+                y_ticks_major: 0.2
+                y_grid_label: True
+                x_grid_label: True
+                padding: 3
+                x_grid: True
+                y_grid: True
+                xmin: -0
+                xmax: 700
+                ymin: -1
+                ymax: 1
+
+
+            Graph:
+                id: graph_v
+                xlabel: 'Tiempo'
+                ylabel: 'Volumen'
+                x_ticks_minor: 10
+                x_ticks_major: 70
+                y_ticks_major: 0.2
+                y_grid_label: True
+                x_grid_label: True
+                padding: 3
+                x_grid: True
+                y_grid: True
+                xmin: -0
+                xmax: 700
+                ymin: -1
+                ymax: 1
+
+
+        BoxLayout:
+            size_hint: (.3, 1)
+            orientation: 'vertical'
+
+            Label:
+                markup: True
+                text: "[size=30]PIP[/size]"
+                color: 1, 0, 0, 1
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                markup: True
+                text: "[size=30]PEEP[/size]"
+                color: 1, 0, 0, 1
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                markup: True
+                text: "[size=30]FLUJO PICO[/size]"
+                color: 1, 0, 0, 1
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                markup: True
+                text: "[size=30]Tinsp[/size]"
+                color: 1, 0, 0, 1
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                markup: True
+                text: "[size=30]Tesp[/size]"
+                color: 1, 0, 0, 1
+                halign: 'center'
+                valign: 'middle'
