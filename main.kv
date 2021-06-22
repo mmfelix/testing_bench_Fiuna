@@ -16,6 +16,9 @@
     background_color: 0.15, 0.15, 0.15, 1
     font_size: self.width/8
 
+<Keyboard@VKeyboard>:
+    id: key
+    
 <RecordPopUp@Popup>:
     file_name: file_name
     title: "RECOPILACION DE DATOS"
@@ -44,7 +47,7 @@
                 hint_text:'Name'
                 multiline: False
                 write_tab: False
-
+            
         BoxLayout:
             padding: 100, 10, 100, 10
             spacing: '100dp'
@@ -141,7 +144,7 @@
                     ylabel: 'Presion (cmH20)'
                     x_ticks_minor: 5
                     x_ticks_major: 2
-                    y_ticks_major: 1
+                    y_ticks_major: 20
                     y_grid_label: True
                     x_grid_label: True
                     padding: 3
@@ -149,8 +152,8 @@
                     y_grid: True
                     xmin: 0
                     xmax: 10
-                    ymin: 0
-                    ymax: 5
+                    ymin: -5
+                    ymax: 100
 
 
                 Graph:
@@ -159,7 +162,7 @@
                     ylabel: 'Flujo (l/min)'
                     x_ticks_minor: 5
                     x_ticks_major: 2
-                    y_ticks_major: 1
+                    y_ticks_major: 20
                     y_grid_label: True
                     x_grid_label: True
                     padding: 3
@@ -167,8 +170,8 @@
                     y_grid: True
                     xmin: 0
                     xmax: 10
-                    ymin: 0
-                    ymax: 5
+                    ymin: -80
+                    ymax: 80
 
 
                 Graph:

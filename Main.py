@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import datetime
+from datetime import timezone
 import csv
 import time, serial
 import ADS1256
@@ -17,9 +18,11 @@ from kivy.config import Config
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.vkeyboard import VKeyboard
 from kivy_garden.graph import LinePlot
 
 Config.set('graphics', 'fullscreen', '1')
@@ -67,14 +70,14 @@ except:
 def createCSV(name="default"):
     with open(name+'.csv', 'w', newline='') as file:
         writer = csv.writer(file, delimiter=',')
-        writer.writerow(["Dia", "Hora", "Minuto", "Segundo", "Microsegundo",
-                         "Presion", "Flujo"])
+        writer.writerow(["Time", "Presion", "Flujo"])
         file.close()
 
 def recordCSV(name="default", pressure=0.0, flow=0.0):
-    time = datetime.datetime.now()
-    row = [time.date(), time.hour, time.minute, time.second, time.microsecond,
-           pressure, flow]
+    time = datetime.datetime.now(timezone.utc)
+    utc_time = time.replace(tzinfo=timezone.utc)
+    utc_timestamp = utc_time.timestamp()
+    row = [utc_timestamp, pressure, flow]
     with open(name+'.csv', 'a', newline='') as file:
         writer = csv.writer(file, delimiter=',')
         writer.writerow(row)
@@ -88,21 +91,20 @@ class ClockText(Label):
 
     def update(self, *args):
         self.text = time.strftime('%I'+':'+'%M'+':'+'%S'+ '%p')
-
-
+    
 class RecordPopUp(Popup):
     file_name = ObjectProperty(None)
     name = StringProperty('')
-
+    
     def accept(self):
         global EnableRecord, CSV_file_name
         self.name = self.file_name.text
         CSV_file_name = self.name
         self.name = ''
-        command = "./ads1256_test /home/pi/TestBench/RaspberryPI/ADS1256/python3/ peeerrooo 0 5"
-        subprocess.Popen(["./ads1256_test", "/home/pi/TestBench/RaspberryPI/ADS1256/python3/",
-                          "cccccc", "0", "5"])
-        time.sleep(10)
+#         command = "./ads1256_test /home/pi/TestBench/RaspberryPI/ADS1256/python3/ peeerrooo 0 5"
+#         subprocess.Popen(["./ads1256_test", "/home/pi/TestBench/RaspberryPI/ADS1256/python3/",
+#                           "cccccc", "0", "5"])
+#         time.sleep(10)
         EnableRecord = True
         self.dismiss()
 
@@ -110,7 +112,6 @@ class RecordPopUp(Popup):
         global EnableRecord
         EnableRecord = False
         self.dismiss()
-
 
 class ConfigTab(TabbedPanel):
     pass
@@ -152,8 +153,8 @@ class MainScreen(BoxLayout):
         
         if EnableRecord or EnableShow or EnableGraph:
             try:
-                self.parameters.pressure = ADC.ADS1256_GetChannalValue(0)*5/0x7fffff
-                self.parameters.flow = ADC.ADS1256_GetChannalValue(1)*5/0x7fffff
+                self.parameters.pressure = 105.0/4.0*(ADC.ADS1256_GetChannalValue(1)*5.0/0x7fffff-0.5) - 5.0
+                self.parameters.flow = (-1)*(ADC.ADS1256_GetChannalValue(2)*5.0/0x7fffff-2.5)*125.0
                                
 #                 d0, d1, c = unpack('BBB', i2c.read(3))
 #                 d = (d0 << 8) | d1
@@ -163,8 +164,8 @@ class MainScreen(BoxLayout):
             except:
                 pass
         
-#         if EnableRecord:
-#             recordCSV(CSV_file_name, self.parameters.pressure, self.parameters.flow)
+        if EnableRecord:
+            recordCSV(CSV_file_name, self.parameters.pressure, self.parameters.flow)
 
         if EnableShow:
             self.parameters.calculateALL()
