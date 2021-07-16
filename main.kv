@@ -1,5 +1,9 @@
 #: import LinePlot kivy_garden.graph.LinePlot
 
+WindowManager:
+    MainWindow:
+    RecordWindow:
+
 <ClockText>:
     canvas.before:
         Color:
@@ -15,108 +19,128 @@
     background_down: ''
     background_color: 0.15, 0.15, 0.15, 1
     font_size: self.width/8
-
-<Keyboard@VKeyboard>:
-    id: key
-    
-<RecordPopUp@Popup>:
-    file_name: file_name
-    title: "RECOPILACION DE DATOS"
-    id: rpop
-    size_hint: 0.8, 0.6
-    auto_dismiss: False
-
-    BoxLayout:
-        orientation: 'vertical'
-
-        BoxLayout:
-            padding: 10, 10, 10, 10
-
-            Label:
-                font_size: self.width/10
-                text: "Nombre del archivo: "
-                pos_hint: {"x":0, "top":0.65}
-                size_hint: 1, 0.5
-
-            TextInput:
-                id: file_name
-                font_size: self.width/10
-                size_hint: (1, 0.5)
-                height: self.height
-                pos_hint: {"x":0.5, "top":0.65}
-                hint_text:'Name'
-                multiline: False
-                write_tab: False
-            
-        BoxLayout:
-            padding: 100, 10, 100, 10
-            spacing: '100dp'
-
-            Button:
-                font_size: self.height/2
-                text: "Accept"
-                size_hint: 0.5, 0.5
-                on_release:
-                    root.accept()
-            Button:
-                font_size: self.height/2
-                text: "Cancel"
-                size_hint: 0.5, 0.5
-                on_release:
-                    app.root.recordButton()
-                    root.cancel()
-
-<ConfigPopUp@Popup>:
-    title: "CONFIGURACION"
-    id: spop
-    size_hint: 0.45, 0.6
+   
+<AdvertenciaPopUp>:
+    title: "Advertencia"
+    id: advertencia
+    size_hint: 0.7, 0.2
+    pos_hint: {'center_x': .5, 'center_y': .5}
     auto_dismiss: True
 
     BoxLayout:
         orientation: 'vertical'
+        Label:
+            text: "Introduzca correctamente los datos"
+            font_size: self.height/2
 
-        ConfigTab:
-            size_hint: 1, 1
-            pos_hint: {'center_x': .5, 'center_y': .5}
-            do_default_tab: False
-            tab_height: 40
-            tab_width: 170
 
-            TabbedPanelItem:
-                text: 'SENSOR DE FLUJO'
-                Label:
-                    text: "First tab"
+<VKeyboard>:
+    margin_hint: [0, 0, 0, 0]
+    
 
-            TabbedPanelItem:
-                text: 'SENSOR DE PRESION'
-                BoxLayout:
-                    Label:
-                        text: 'Press button'
-                    Button:
-                        text: 'Click it'
+<RecordWindow>:
+
+    name: "record"
+    file_name: file_name
+    min: duration_min
+    sec: duration_sec
+    id: record_window
+    size_hint: 1, 1
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 100, 100, 100, 100
 
         BoxLayout:
-            size_hint: 1, 0.1
-            padding: 100, 0, 100, 0
-            spacing: '100dp'
+            Label:
+                font_size: self.height/1.5
+                text: "Nombre del archivo: "
+                pos_hint: {"x":0, "top":1}
+                size_hint: 1, 0.5
+
+            TextInput:
+                id: file_name
+                font_size: self.height/1.5
+                size_hint: 1, 0.5
+                height: self.height
+                pos_hint: {"x":0.5, "top":1}
+                hint_text:'Name'
+                multiline: False
+                write_tab: False
+
+        BoxLayout:
+            Label:
+                font_size: self.height/1.5
+                text: "Duracion: "
+                pos_hint: {"x":0, "top":1}
+                size_hint: 1, 0.5
+        
+            BoxLayout:
+                spacing: '0sp'
+                padding: 0, 0, 190, 0
+                TextInput:
+                    id: duration_min
+                    font_size: self.height/1.5
+                    size_hint: 1, 0.5
+                    height: self.height
+                    pos_hint: {"x":0.5, "top":1}
+                    hint_text:'Min'
+                    multiline: False
+                    write_tab: False
+
+                Label:
+                    text: ':'
+                    font_size: self.height
+                    size_hint: 1, 0.5
+                    height: self.height
+                    pos_hint: {"x":0.5, "top":1.05}
+            
+                TextInput:
+                    id: duration_sec
+                    font_size: self.height/1.5
+                    size_hint: 1, 0.5
+                    height: self.height
+                    pos_hint: {"x":0.5, "top":1}
+                    hint_text:'Sec'
+                    multiline: False
+                    write_tab: False
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            Spinner:
+                id: spinner_id
+                pos_hint: {'center': (.5, .5)}
+                text: "Storages"
+                values: ["USB 1", "USB 2", "USB 3"]
+
+            Label:
+                text: ''
+           
+
+        BoxLayout:
+            spacing: '20dp'
 
             Button:
-                font_size: '25sp'
-                text: "Accept"
-                size_hint: 0.9, 0.9
+                font_size: self.height/2
+                text: "Aceptar"
+                size_hint: 0.5, 0.5
                 on_release:
-                    app.root.configButton()
                     root.accept()
+                                        
             Button:
-                font_size: '25sp'
-                text: "Cancel"
-                size_hint: 0.9, 0.9
+                font_size: self.height/2
+                text: "Cancelar"
+                size_hint: 0.5, 0.5
                 on_release:
-                    app.root.configButton()
                     root.cancel()
+                    app.root.current = "main"
+                    root.manager.transition.direction = "up"
+                    
 
-<MainScreen>:
+<MainWindow>:
 
+    name: "main"
     graph_P: graph_p
     graph_F: graph_f
     graph_V: graph_v
@@ -140,7 +164,7 @@
                         size: self.size
                 Graph:
                     id: graph_p
-                    xlabel: 'Tiempo (s)'
+                    xlabel: ''
                     ylabel: 'Presion (cmH20)'
                     x_ticks_minor: 5
                     x_ticks_major: 2
@@ -158,7 +182,7 @@
 
                 Graph:
                     id: graph_f
-                    xlabel: 'Tiempo (s)'
+                    xlabel: ''
                     ylabel: 'Flujo (l/min)'
                     x_ticks_minor: 5
                     x_ticks_major: 2
@@ -191,11 +215,9 @@
                     ymin: -100
                     ymax: 500
 
-
             GridLayout:
                 cols: 2
                 size_hint: (.3, 1)
-                orientation: 'vertical'
                 spacing: '10dp'
 
                 # PIP
@@ -322,7 +344,7 @@
                     Label:
                         size_hint: 1, 0.4
                         font_size: self.height
-                        text: "Te"
+                        text: "FiO2"
                         text_size: self.size
                         valign: 'top'
                         halign: 'left'
@@ -331,7 +353,7 @@
                     Label:
                         size_hint: 1, 1
                         font_size: self.height/2
-                        text: root.te_string
+                        text: root.fio2_string
                         text_size: self.size
                         valign: 'middle'
                         halign: 'right'
@@ -530,16 +552,11 @@
                     on_release: root.showButton()
 
                 ButtonNew:
-                    id: setear
-                    text: "Configuración"
-                    size_hint: 1, 1
-                    on_release: root.configButton()
-
-                ButtonNew:
                     id: grabar
-                    text: "Grabación"
+                    text: "Grabación" 
                     size_hint: 1, 1
-                    on_release: root.recordButton()
+                    on_release:
+                        root.recordButton()
 
                 ButtonNew:
                     id: info

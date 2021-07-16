@@ -1,88 +1,113 @@
 #!/usr/bin/python3
 import datetime
-from datetime import timezone
+from datetime import timedelta, timezone
 import csv
+
 import time, serial
+from kivy import app
+from kivy.lang.builder import Builder
 import ADS1256
 import RPi.GPIO as GPIO
 import subprocess
 import time
 from ventparams import VentilatorParams
-
-import smbus
-from fcntl import ioctl
-from struct import unpack
-
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.config import Config
+from kivy.core.window import Window
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.uix.spinner import Spinner
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.vkeyboard import VKeyboard
-from kivy_garden.graph import LinePlot
+from kivy_garden.graph import Graph, LinePlot
+from kivy.uix.screenmanager import ScreenManager, Screen
 
+Config.set('kivy', 'keyboard_mode', 'systemanddock')
 Config.set('graphics', 'fullscreen', '1')
 Config.set('graphics', 'show_cursor', '0')
-Config.set('graphics', 'height', '320')
-Config.set('graphics', 'width', '480')
+Config.set('graphics', 'height', '720')
+Config.set('graphics', 'width', '1080')
 Config.write()
 
 EnableGraph = False
 EnableRecord = False
 EnableShow = False
 
+record_time = ''
 CSV_file_name = 'default'
 count = 0
-offset = 0
-
-# df = pd.read_csv("Gui_data.csv")
-
-ADDRESS = 0x40
-sfm3300 = smbus.SMBus(1)
-# ser = serial.Serial("/dev/ttyUSB0", baudrate=115200, timeout=2)
+offset_pressure = 0.0
+offset_flow = 0.0
 
 try:
     ADC = ADS1256.ADS1256()
     ADC.ADS1256_init()
-    
-#     sfm3300.write_byte_data(ADDRESS, 16, 0)
-#     i2c = open("/dev/i2c-1", "rb", buffering=0)
-#     ioctl(i2c, 0x0703, ADDRESS)
-#     i2c.read(3)
-#                 
+               
 except:
-    #GPIO.cleanup()
+    GPIO.cleanup()
     print ("\r\nProgram end     ")
 
-# pressure = 0.0
-# 
 # for i in range(100):
-#     pressure = ADC.ADS1256_GetChannalValue(0)*5/0x7fffff
-#     pressure = (pressure-(0.10*3.3))*10/(0.8*3.3) + 5
-#     pressure *= 70.307
-#     offset = offset + pressure
-# offset = offset/100.0
+#     offset_pressure += 105.0/4.0*(ADC.ADS1256_GetChannalValue(1)*5.0/0x7fffff-0.5) - 5.0
+#     offset_flow += (-1)*(ADC.ADS1256_GetChannalValue(2)*5.0/0x7fffff-2.5)*125.0
+# 
+# offset_pressure = offset_pressure/100.0
+# offset_flow = offset_flow/100.0
     
 def createCSV(name="default"):
     with open(name+'.csv', 'w', newline='') as file:
         writer = csv.writer(file, delimiter=',')
-        writer.writerow(["Time", "Presion", "Flujo"])
+        writer.writerow(["Time", "Presion", "Flujo", "Oxigeno"])
         file.close()
 
-def recordCSV(name="default", pressure=0.0, flow=0.0):
+def recordCSV(name="default", pressure=0.0, flow=0.0, oxygen=0.0):
     time = datetime.datetime.now(timezone.utc)
     utc_time = time.replace(tzinfo=timezone.utc)
     utc_timestamp = utc_time.timestamp()
-    row = [utc_timestamp, pressure, flow]
+    row = [utc_timestamp, pressure, flow, oxygen]
     with open(name+'.csv', 'a', newline='') as file:
         writer = csv.writer(file, delimiter=',')
         writer.writerow(row)
         file.close()
 
+class WindowManager(ScreenManager):
+    pass
+
+class AdvertenciaPopUp(Popup):
+    pass
+
+class RecordWindow(Screen):
+    file_name = ObjectProperty(None)
+    min = ObjectProperty(None)
+    sec = ObjectProperty(None)
+
+    def accept(self):
+        global EnableRecord, CSV_file_name, record_time
+        try:
+            print(self.min.text, self.sec.text)
+            record_time = datetime.datetime.now() + timedelta(minutes=int(self.min.text), seconds=int(self.sec.text))
+            
+            if self.file_name.text != '':
+                CSV_file_name = self.file_name.text
+
+            self.file_name.text = ''
+            self.min.text = ''
+            self.sec.text = ''
+            EnableRecord = True
+            App.get_running_app().root.current = "main"
+            self.manager.transition.direction = "up"
+
+        except:
+            AdvertenciaPopUp().open()
+
+
+    def cancel(self):
+        global EnableRecord
+        EnableRecord = False
 
 class ClockText(Label):
     def __init__(self, *args, **kwargs):
@@ -90,50 +115,22 @@ class ClockText(Label):
         Clock.schedule_interval(self.update, 1)
 
     def update(self, *args):
-        self.text = time.strftime('%I'+':'+'%M'+':'+'%S'+ '%p')
+        self.text = time.strftime('%I:%M:%S %p')
     
-class RecordPopUp(Popup):
-    file_name = ObjectProperty(None)
-    name = StringProperty('')
-    
-    def accept(self):
-        global EnableRecord, CSV_file_name
-        self.name = self.file_name.text
-        CSV_file_name = self.name
-        self.name = ''
-#         command = "./ads1256_test /home/pi/TestBench/RaspberryPI/ADS1256/python3/ peeerrooo 0 5"
-#         subprocess.Popen(["./ads1256_test", "/home/pi/TestBench/RaspberryPI/ADS1256/python3/",
-#                           "cccccc", "0", "5"])
-#         time.sleep(10)
-        EnableRecord = True
-        self.dismiss()
-
-    def cancel(self):
-        global EnableRecord
-        EnableRecord = False
-        self.dismiss()
 
 class ConfigTab(TabbedPanel):
     pass
+   
 
-
-class ConfigPopUp(Popup):
-    def accept(self):
-        self.dismiss()
-
-    def cancel(self):
-        self.dismiss()
-    pass
+class MainWindow(Screen):
+    graph_P = ObjectProperty(Graph())
+    graph_F = ObjectProperty(Graph())
+    graph_V = ObjectProperty(Graph())
     
-class MainScreen(BoxLayout):
-    graph_P = ObjectProperty(None)
-    graph_F = ObjectProperty(None)
-    graph_V = ObjectProperty(None)
-
     pip_string = StringProperty("--")
     peep_string = StringProperty("--")
     ti_string = StringProperty("--")
-    te_string= StringProperty("--")
+    fio2_string= StringProperty("--")
     ie_string = StringProperty("--")
     bpm_string = StringProperty("--")
     pif_string = StringProperty("--")
@@ -141,7 +138,7 @@ class MainScreen(BoxLayout):
 
 
     def __init__(self, *args, **kwargs):
-        super(MainScreen, self).__init__(*args, **kwargs)
+        super(MainWindow, self).__init__(*args, **kwargs)
         self.plot_p = LinePlot(line_width=1.1, color=[1, 0, 0, 1])
         self.plot_f = LinePlot(line_width=1.1, color=[0.5, 1, 0.5, 1])
         self.plot_v = LinePlot(line_width=1.1, color=[0, 0.55, 0.8, 1])
@@ -149,23 +146,34 @@ class MainScreen(BoxLayout):
         Clock.schedule_interval(self.update, 1/100.0)
 
     def update(self, *args):
-        global count, offset
+        global count, record_time, EnableRecord
+        # if offset < 80 and count == 9.5:
+        #     offset += 5
+        
+        # self.graph_F.ymax = offset+3
+        # self.graph_F.ymin = -offset+2
+
         
         if EnableRecord or EnableShow or EnableGraph:
             try:
                 self.parameters.pressure = 105.0/4.0*(ADC.ADS1256_GetChannalValue(1)*5.0/0x7fffff-0.5) - 5.0
                 self.parameters.flow = (-1)*(ADC.ADS1256_GetChannalValue(2)*5.0/0x7fffff-2.5)*125.0
-                               
-#                 d0, d1, c = unpack('BBB', i2c.read(3))
-#                 d = (d0 << 8) | d1
-#                 self.parameters.flow = (float(d) - 32768.0)/120
-                pass
-                    
+                self.parameters.oxygen = (39)*(ADC.ADS1256_GetChannalValue(0)*5.0/0x7fffff-3.0) + 100.0
+                                    
             except:
                 pass
         
         if EnableRecord:
-            recordCSV(CSV_file_name, self.parameters.pressure, self.parameters.flow)
+            self.ids['grabar'].background_color = (0.0, 0.7, 0.0, 1.0)
+            self.ids['grabar'].text = str(record_time - datetime.datetime.now())[2:7]
+            if (record_time - datetime.datetime.now()) < datetime.timedelta(0):
+                EnableRecord = False
+
+            recordCSV(CSV_file_name, self.parameters.pressure, self.parameters.flow, self.parameters.oxygen)
+        
+        else:
+            self.ids['grabar'].text = "Grabación"
+            self.ids['grabar'].background_color = (0.15, 0.15, 0.15, 1.0)
 
         if EnableShow:
             self.parameters.calculateALL()
@@ -173,7 +181,7 @@ class MainScreen(BoxLayout):
                 self.pip_string = str(round(self.parameters.pip['current'], 1))
                 self.peep_string = str(round(self.parameters.peep['current'], 1))
                 self.ti_string = str(round(self.parameters.ti['current'], 2))
-                self.te_string = str(round(self.parameters.te['current'], 2))
+                self.fio2_string = str(round(self.parameters.oxygen, 1))
                 self.ie_string = str(round(self.parameters.ie['current'], 1))
                 self.bpm_string = str(round(self.parameters.bpm['current'], 1))
                 self.pif_string = str(round(self.parameters.pif['current'], 1))
@@ -184,7 +192,7 @@ class MainScreen(BoxLayout):
             self.pip_string = "--"
             self.peep_string = "--"
             self.ti_string= "--"
-            self.te_string = "--"
+            self.fio2_string = "--"
             self.ie_string = "--"
             self.bpm_string = "--"
             self.pif_string = "--"
@@ -239,24 +247,16 @@ class MainScreen(BoxLayout):
             EnableShow = True
             return
 
-    def configButton(self):
-        if self.ids['setear'].background_color == [0.0, 0.7, 0.0, 1.0]:
-            self.ids['setear'].background_color = (0.15, 0.15, 0.15, 1.0)
-            return
-        elif self.ids['setear'].background_color == [0.15, 0.15, 0.15, 1]:
-            ConfigPopUp().open()
-            self.ids['setear'].background_color = (0.0, 0.7, 0.0, 1.0)
-            return
-
     def recordButton(self):
         global EnableRecord
         if self.ids['grabar'].background_color == [0.0, 0.7, 0.0, 1.0]:
             self.ids['grabar'].background_color = (0.15, 0.15, 0.15, 1.0)
             EnableRecord = False
+            print("hola")
             return
         elif self.ids['grabar'].background_color == [0.15, 0.15, 0.15, 1]:
-            RecordPopUp().open()
-            self.ids['grabar'].background_color = (0.0, 0.7, 0.0, 1.0)
+            App.get_running_app().root.current = "record"
+            self.manager.transition.direction = "down"
             return
 
     def infoButton(self):
@@ -268,17 +268,11 @@ class MainScreen(BoxLayout):
             return
 
     def exitButton(self):
-#         command = "/usr/bin/sudo /sbin/shutdown -h now"
-#         import subprocess
-#         process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-#         output = process.communicate()[0]
         exit()
-        print(output)
-        
+
 class MainApp(App):
     def build(self):
-        test = MainScreen()
-        return test
+        pass
 
 if __name__ == '__main__':
     MainApp().run()

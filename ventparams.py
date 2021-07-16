@@ -10,6 +10,7 @@ class VentilatorParams():
     def __init__(self):
         self.pressure = 0.0
         self.flow = 0.0
+        self.oxygen = 0.0
         self.flow_last = 0.0
         self.volume = 0.0
         self.pip = {'current': None, 'auxiliar': None}
